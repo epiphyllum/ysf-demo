@@ -47,12 +47,12 @@ public class AcqService {
     /**
      *  redis保存交易上下文
      */
-    public void saveTxnContext(String txnKey) {
+    public void saveTxn(String txnKey) {
     }
 
     /**
      * 获取交易上下文
      */
-    public void getTxnContext(String txnKey) {
+    public void getTxn(String txnKey) {
     }
 }

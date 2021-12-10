@@ -22,7 +22,6 @@ public class AcqController {
         return 1;
     }
 
-
     /**
      * 尝试签约
      */

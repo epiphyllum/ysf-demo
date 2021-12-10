@@ -29,29 +29,14 @@ create table t_mcht_order
 
     txn_id      varchar(64) comment '支付公司流水号',
     yfs_id      varchar(64) comment '银联流水号',
-
     status      smallint            not null default 0 comment '0: 处理中, 1: 成功, 2: 失败',
+
     create_time datetime            not null default current_timestamp() comment '创建时间',
     update_time datetime comment '更新时间',
     primary key (id)
 
 ) engine = innodb;
 
--- 商户接口交互报文记录
-drop table if exists t_mcht_packet;
-create table t_mcht_packet
-(
-    id          bigint(20) unsigned not null auto_increment,
-    mcht_no     varchar(32) comment '商户号',
-    order_no    varchar(64) comment '商户订单号',
-    txn_id      varchar(64) comment '支付平台订单号',
-    request     varchar(1024) comment '商户请求报文',
-    response    varchar(1024) comment '商户应答报文',
-    notify      varchar(1024) comment '商户通知报文',
-    create_time datetime            not null default current_timestamp() comment '创建时间',
-    update_time datetime comment '更新时间',
-    primary key (id)
-) engine = innodb;
 
 -- 协议表
 drop table if exists t_mcht_contract;
@@ -70,6 +55,25 @@ create table t_mcht_contract
     update_time datetime comment '更新时间',
     primary key (id)
 ) engine = innodb;
+
+--
+
+-- 商户接口交互报文记录
+drop table if exists t_mcht_packet;
+create table t_mcht_packet
+(
+    id          bigint(20) unsigned not null auto_increment,
+    mcht_no     varchar(32) comment '商户号',
+    order_no    varchar(64) comment '商户订单号',
+    txn_id      varchar(64) comment '支付平台订单号',
+    request     varchar(1024) comment '商户请求报文',
+    response    varchar(1024) comment '商户应答报文',
+    notify      varchar(1024) comment '商户通知报文',
+    create_time datetime            not null default current_timestamp() comment '创建时间',
+    update_time datetime comment '更新时间',
+    primary key (id)
+) engine = innodb;
+
 
 -- 银联交易流水
 drop table if exists t_ysf_packet;

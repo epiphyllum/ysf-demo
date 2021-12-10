@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koolyun.ysf.ysfdemo.acq.service.AcqService;
 import com.koolyun.ysf.ysfdemo.common.RedisUtil;
 import com.koolyun.ysf.ysfdemo.acq.service.YsfService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,6 +21,11 @@ import java.util.Map;
 @Slf4j
 public class IndexController {
 
+    @Data
+    static class SignDTO {
+    }
+
+
     @Autowired
     private RedisUtil redisUtil;
 
@@ -27,21 +33,21 @@ public class IndexController {
     private ObjectMapper objectMapper;
     /**
      * vue app入口
-     * mchtno,   商户号
+     * mcht_no,   商户号
      * <p>
-     * orderno,  订单号
+     * order_no,  订单号
      * amount,   订单金额
      * <p>
      * 用户信息， 需要加密
      * userinfo = {
-     * userid,    用户id(hash)
-     * username,  用户姓名
-     * idno,      身份证号
+     * user_id,    用户id(hash)
+     * name,  用户姓名
+     * id_no,      身份证号
      * mobile,    手机号
-     * isreal,    是否实名
+     * is_real,    是否实名
      * },
      * <p>
-     * contractid,  扣款协议号
+     * contract_id,  扣款协议号
      * <p>
      * signature,  签名信息
      * <p>
@@ -65,24 +71,19 @@ public class IndexController {
     /**
      * 单页面应用入口
      *
+     *
+     *
      * @param params
-     * @param txnKey
+     * txnkey 生成规则:   mcht_no + "-"  + order_no
      * @return
      */
-    @GetMapping("/index/:txnKey")
-    public ModelAndView index(
-            @RequestParam Map<String, String> params,
-            @PathVariable("txnKey") String txnKey
+    @GetMapping("/index")
+    public ModelAndView index( @RequestParam Map<String, String> params
     ) {
         ModelAndView mav = new ModelAndView();
-        mav.setViewName("acq/index.html");
-
-        // 创建交易, redis保存上下文
-        acqService.createMchtOrder();
-        acqService.saveTxnContext(txnKey); // txnKey, txn;
 
         // 1. 移除签名字段
-        String signature = (String) params.remove("signature");
+        String signature = params.remove("signature");
         if (signature == null) {
             // vue - 展示: 错误信息
             mav.addObject("component", "err");
@@ -92,11 +93,19 @@ public class IndexController {
 
         // 1> 验证签名
         // 签名错误
-        boolean sigok = false;
+        boolean sigok = true;
         if (!sigok) {
             mav.addObject("component", "err");
             mav.addObject("msg", "签名错误");
         }
+
+        mav.setViewName("acq/index.html");
+
+        // 创建交易, redis保存上下文,   入库
+        acqService.createMchtOrder();
+
+        String txnKey = params.get("mcht_no") + "-"  + params.get("order_no");
+        acqService.saveTxn(txnKey); // txnKey, txn;
 
         // 带协议号, 直接向银联发起后台扣款
         String contractid = (String) params.remove("contract_id");
@@ -122,24 +131,23 @@ public class IndexController {
         // 不带协议号, 则直尝试发起签约, 让vue app展示签约界面
         String userinfo = (String) params.remove("userinfo");
         mav.addObject("component", "sign");
-        mav.addObject("data", userinfo);
+        SignDTO signDTO = new SignDTO();
+        mav.addObject("data", signDTO);
+
         return mav;
     }
 
     /**
      * 从银联跳回
      */
-    @GetMapping("/resume/{txnKey}")
-    public ModelAndView resume(@PathVariable("txnKey") String txnKey) {
+    @GetMapping("/resume")
+    public ModelAndView resume(@RequestParam("txnKey") String txnKey) {
         ModelAndView mav = new ModelAndView();
 
         // 取出上下文
-//        Object txn = redisUtil.get(txnKey);
+//        Object txn = AcqService.getTxn(txnKey);
 
-        mav.addObject("component", "sign");
-        mav.addObject("data", "data");   //  不需要实名了！！！！！  因为已经实名过了。
-
-        mav.setViewName("acq/index.html");
+        //   尝试签约 + 扣款，
         return mav;
     }
 
