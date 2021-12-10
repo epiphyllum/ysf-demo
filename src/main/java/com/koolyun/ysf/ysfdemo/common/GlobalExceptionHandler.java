@@ -11,7 +11,6 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
@@ -32,18 +31,11 @@ public class GlobalExceptionHandler implements ResponseBodyAdvice<Object> {
         return true;
     }
 
-    // 只对RestContoller 起作用 (@ResponseBody起作用)
+    // 只对RestContoller 起作用 (只对@ResponseBody的Action起作用)
     @SneakyThrows
     @Override
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType
             , Class selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
-
-        // 这里不需要， 事实上， 只有API请求， 才会到达这里
-//        log.info("请求URI - " + request.getURI().getPath());
-//        if ( !request.getURI().getPath().contains("/api/")) {
-//            log.info("页面请求 - " + request.getURI().getPath());
-//            return body;
-//        }
 
         // 防止二次封装
         if (body instanceof Result) {
@@ -52,12 +44,30 @@ public class GlobalExceptionHandler implements ResponseBodyAdvice<Object> {
 
         // 防止controller返回是String类型报错
         if (body instanceof String) {
-            return objectMapper.writeValueAsString(Result.ok(body));
+            return objectMapper.writeValueAsString(Result.ok(body));     // 返回String
         }
 
-        return Result.ok(body);
+        return Result.ok(body);  // 返回Result
     }
 
+
+
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    public Object exceptionHandler(HttpServletRequest httpServletRequest, Exception e) {
+        log.error("全局异常信息 ex= {}", e);
+
+
+        // API接口异常
+        if (isApiRequest(httpServletRequest)) {
+            return Result.fail(50000, e.getMessage());
+        } else {
+            // 页面异常
+            ModelAndView mav = new ModelAndView();
+            mav.setViewName("500.html");
+            return mav;
+        }
+    }
 
     /**
      * 是否为API请求
@@ -69,18 +79,6 @@ public class GlobalExceptionHandler implements ResponseBodyAdvice<Object> {
         return request.getRequestURI().contains("/api/");
     }
 
-    @ExceptionHandler(Exception.class)
-    @ResponseBody
-    public Object exceptionHandler(HttpServletRequest httpServletRequest, Exception e) {
-        log.error("全局异常信息 ex= {}", e.getMessage(), e);
-        if (isApiRequest(httpServletRequest)) {
-            return Result.fail(50000, e.getMessage());
-        } else {
-            ModelAndView mav = new ModelAndView();
-            mav.setViewName("500.html");
-            return mav;
-        }
-    }
 
 }
 

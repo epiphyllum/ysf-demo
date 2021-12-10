@@ -2,7 +2,7 @@ package com.koolyun.ysf.ysfdemo.acq.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koolyun.ysf.ysfdemo.acq.service.AcqService;
-import com.koolyun.ysf.ysfdemo.acq.service.RedisUtil;
+import com.koolyun.ysf.ysfdemo.common.RedisUtil;
 import com.koolyun.ysf.ysfdemo.acq.service.YsfService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -134,7 +134,7 @@ public class IndexController {
         ModelAndView mav = new ModelAndView();
 
         // 取出上下文
-        Object txn = redisUtil.get(txnKey);
+//        Object txn = redisUtil.get(txnKey);
 
         mav.addObject("component", "sign");
         mav.addObject("data", "data");   //  不需要实名了！！！！！  因为已经实名过了。
