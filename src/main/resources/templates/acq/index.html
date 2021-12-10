@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!--解决idea thymeleaf 表达式模板报红波浪线-->
+<!--suppress ALL -->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>srpingboot</title>
+</head>
+<body>
+<h1>收单机构页面</h1>
+
+<script th:inline="javascript">
+    /* 展示那个组件*/
+    var componentName = /*[[$component]]*/ null;
+
+    /* 组件数据 */
+    var componentData = /*[[${data}]]*/ null;
+
+    /* 如果component == 'err'的话， 有错误信息*/
+    var errMsg = /*[[$msg]]*/ null;
+</script>
+
+<!-- vue 数据-->
+
+<div id="app">
+</div>
+
+</body>
+</html>
