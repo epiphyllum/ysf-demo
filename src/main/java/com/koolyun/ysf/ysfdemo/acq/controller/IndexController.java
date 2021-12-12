@@ -1,11 +1,18 @@
 package com.koolyun.ysf.ysfdemo.acq.controller;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.koolyun.ysf.ysfdemo.acq.dto.EntranceDTO;
+import com.koolyun.ysf.ysfdemo.acq.dto.UserInfoDTO;
 import com.koolyun.ysf.ysfdemo.acq.service.AcqService;
 import com.koolyun.ysf.ysfdemo.common.RedisUtil;
 import com.koolyun.ysf.ysfdemo.acq.service.YsfService;
+import com.koolyun.ysf.ysfdemo.entity.TMchtContract;
+import com.koolyun.ysf.ysfdemo.service.TMchtContractService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.validation.Valid;
 import java.util.Map;
 
 @Controller("acqIndexController")
@@ -68,23 +76,26 @@ public class IndexController {
     @Autowired
     private AcqService acqService;
 
+    @Autowired
+    private TMchtContractService tMchtContractService;
+
     /**
      * 单页面应用入口
      *
      *
      *
-     * @param params
+     * @param entranceDTO
      * txnkey 生成规则:   mcht_no + "-"  + order_no
      * @return
      */
     @GetMapping("/index")
-    public ModelAndView index( @RequestParam Map<String, String> params
-    ) {
+    public ModelAndView index(@Valid EntranceDTO entranceDTO
+                              ) {
         ModelAndView mav = new ModelAndView();
 
         // 1. 移除签名字段
-        String signature = params.remove("signature");
-        if (signature == null) {
+        // String signature = params.remove("signature");
+        if (entranceDTO.getSignature() == null) {
             // vue - 展示: 错误信息
             mav.addObject("component", "err");
             mav.addObject("msg", "缺少签名");
@@ -93,7 +104,7 @@ public class IndexController {
 
         // 1> 验证签名
         // 签名错误
-        boolean sigok = true;
+        boolean sigok = acqService.verify(entranceDTO);
         if (!sigok) {
             mav.addObject("component", "err");
             mav.addObject("msg", "签名错误");
@@ -102,17 +113,17 @@ public class IndexController {
         mav.setViewName("acq/index.html");
 
         // 创建交易, redis保存上下文,   入库
-        acqService.createMchtOrder();
+        acqService.createMchtOrder(entranceDTO);
 
-        String txnKey = params.get("mcht_no") + "-"  + params.get("order_no");
-        acqService.saveTxn(txnKey); // txnKey, txn;
+        String txnKey = entranceDTO.getMchtNo() + "-"  + entranceDTO.getOrderNo();
+        acqService.saveTxn(txnKey,entranceDTO); // txnKey, txn;
 
         // 带协议号, 直接向银联发起后台扣款
-        String contractid = (String) params.remove("contract_id");
+        String contractid = entranceDTO.getContractId();
         if (contractid != null) {
 
             // 发起协议收款
-            ysfService.pay();
+            ysfService.pay(entranceDTO);
 
             // 1. 协议扣款发起成功,
             if (true) {
@@ -129,7 +140,7 @@ public class IndexController {
         }
 
         // 不带协议号, 则直尝试发起签约, 让vue app展示签约界面
-        String userinfo = (String) params.remove("userinfo");
+        // String userinfo = (String) params.remove("userinfo");
         mav.addObject("component", "sign");
         SignDTO signDTO = new SignDTO();
         mav.addObject("data", signDTO);
@@ -144,10 +155,30 @@ public class IndexController {
     public ModelAndView resume(@RequestParam("txnKey") String txnKey) {
         ModelAndView mav = new ModelAndView();
 
-        // 取出上下文
-//        Object txn = AcqService.getTxn(txnKey);
+        //从银联跳回去redis中查询订单信息+数据库存查询签约协议号
 
+        // 取出上下文
+        EntranceDTO  entranceDTO = acqService.getTxn(txnKey);
         //   尝试签约 + 扣款，
+        String contractId = "";
+        //isReal=1:商户已经实名,否则通过user_id从数据库中获取实名信息.
+        if(entranceDTO.getUserInfo().getIsReal()==1){
+            contractId = ysfService.contract(entranceDTO.getUserInfo());
+        }else {
+            //从数据库中获取userInfo
+            TMchtContract byUserId = tMchtContractService.getOne(new QueryWrapper<TMchtContract>()
+                    .eq("user_id", entranceDTO.getUserInfo().getUserId()));
+            UserInfoDTO userInfoDTO = new UserInfoDTO();
+            BeanUtil.copyProperties(byUserId,userInfoDTO);
+            userInfoDTO.setIsReal(1); //已认证
+            contractId = ysfService.contract(userInfoDTO);
+        }
+
+        //签约成功的情况下发起扣款
+        if(!StringUtils.isEmpty(contractId)){
+            entranceDTO.setContractId(contractId);
+            ysfService.pay(entranceDTO);
+        }
         return mav;
     }
 

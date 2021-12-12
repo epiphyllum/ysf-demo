@@ -1,0 +1,23 @@
+server:
+  port: 8081
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.1.104:3306/acq?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    mode: HTML
+  redis:
+    host: 192.168.1.104
+    database: 1
+
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*.xml
+  type-aliases-package: com.koolyun.ysf.ysfdemo.entity
+  # sql日志输入
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

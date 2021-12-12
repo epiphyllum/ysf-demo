@@ -2,6 +2,11 @@ package com.koolyun.ysf.ysfdemo.entity;
 
 import java.util.Date;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
 import java.io.Serializable;
 
 /**
@@ -10,8 +15,11 @@ import java.io.Serializable;
  * @author makejava
  * @since 2021-12-10 17:07:08
  */
-@SuppressWarnings("serial")
-public class TMcht extends Model<TMcht> {
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Accessors(chain = true)
+public class TMcht extends Model<TMcht> implements  Serializable{
     
     private Long id;
     //商户号
@@ -23,55 +31,5 @@ public class TMcht extends Model<TMcht> {
     //更新时间
     private Date updateTime;
 
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getMchtNo() {
-        return mchtNo;
-    }
-
-    public void setMchtNo(String mchtNo) {
-        this.mchtNo = mchtNo;
-    }
-
-    public String getPublicKey() {
-        return publicKey;
-    }
-
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
-    }
-
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
-
-    public Date getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    /**
-     * 获取主键值
-     *
-     * @return 主键值
-     */
-    @Override
-    protected Serializable pkVal() {
-        return this.id;
-    }
     }
 
