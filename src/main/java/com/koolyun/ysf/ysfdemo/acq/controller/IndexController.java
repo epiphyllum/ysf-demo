@@ -89,64 +89,44 @@ public class IndexController {
      * @return
      */
     @GetMapping("/index")
-    public ModelAndView index(@Valid EntranceDTO entranceDTO
-                              ) {
+    public ModelAndView index(@Valid EntranceDTO entranceDTO) {
         ModelAndView mav = new ModelAndView();
-
-        // 1. 移除签名字段
-        // String signature = params.remove("signature");
-        if (entranceDTO.getSignature() == null) {
-            // vue - 展示: 错误信息
-            mav.addObject("component", "err");
-            mav.addObject("msg", "缺少签名");
-            return mav;
-        }
-
         // 1> 验证签名
         // 签名错误
         boolean sigok = acqService.verify(entranceDTO);
         if (!sigok) {
             mav.addObject("component", "err");
             mav.addObject("msg", "签名错误");
+            return mav;
         }
-
-        mav.setViewName("/acq/index");
-
         // 创建交易, redis保存上下文,   入库
         acqService.createMchtOrder(entranceDTO);
-
         String txnKey = entranceDTO.getMchtNo() + "-"  + entranceDTO.getOrderNo();
         acqService.saveTxn(txnKey,entranceDTO); // txnKey, txn;
-
         // 带协议号, 直接向银联发起后台扣款
         String contractid = entranceDTO.getContractId();
         if (contractid != null) {
-
             // 发起协议收款
             Boolean payFlag = ysfService.pay(entranceDTO);
-
             // 1. 协议扣款发起成功,
             if (payFlag) {
-//              mav.addObject("component", "paying");
+                //mav.addObject("component", "paying");
                 mav.setViewName("/acq/paySuccess");
                 return mav;
             }
-
             // 2. 协议扣款发起失败
             if (!payFlag) {
-//              mav.addObject("component", "err");
+                //mav.addObject("component", "err");
                 mav.setViewName("/acq/payFail");
                 mav.addObject("msg", "发起收款失败");
                 return mav;
             }
         }
-
         // 不带协议号, 则直尝试发起签约, 让vue app展示签约界面
         // String userinfo = (String) params.remove("userinfo");
         mav.addObject("component", "sign");
         SignDTO signDTO = new SignDTO();
         mav.addObject("data", signDTO);
-
         return mav;
     }
 
