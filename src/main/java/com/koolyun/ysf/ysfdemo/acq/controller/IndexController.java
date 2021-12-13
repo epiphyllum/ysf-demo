@@ -105,7 +105,7 @@ public class IndexController {
         acqService.saveTxn(txnKey,entranceDTO); // txnKey, txn;
         // 带协议号, 直接向银联发起后台扣款
         String contractid = entranceDTO.getContractId();
-        if (contractid != null) {
+        if (!StringUtils.isEmpty(contractid)) {
             // 发起协议收款
             Boolean payFlag = ysfService.pay(entranceDTO);
             // 1. 协议扣款发起成功,

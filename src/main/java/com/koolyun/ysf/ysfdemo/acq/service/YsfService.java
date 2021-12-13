@@ -45,7 +45,8 @@ public class YsfService {
         //假设银联返回的签约协议号
         String contractId = "89712322351";
         //签约成功协议号落库
-        boolean updateFlag = tMchtContractService.update(new UpdateWrapper<TMchtContract>().set("contract_id", contractId));
+        boolean updateFlag = tMchtContractService.update(new UpdateWrapper<TMchtContract>().set("contract_id", contractId)
+                                                        .eq("user_id",userInfoDTO.getUserId()));
         if(!updateFlag){
             return null;
         }

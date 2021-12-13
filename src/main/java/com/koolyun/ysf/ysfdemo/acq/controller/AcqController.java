@@ -64,6 +64,7 @@ public class AcqController {
             return;
         }
         // 如果签约成功 - 直接发起扣款, 展示扣款中组件
+        txn.setContractId(contractId);
         Boolean payFlag = ysfService.pay(txn);
         return;
     }
