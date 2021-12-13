@@ -110,7 +110,7 @@ public class IndexController {
             mav.addObject("msg", "签名错误");
         }
 
-        mav.setViewName("acq/index.html");
+        mav.setViewName("/acq/index");
 
         // 创建交易, redis保存上下文,   入库
         acqService.createMchtOrder(entranceDTO);
@@ -123,17 +123,19 @@ public class IndexController {
         if (contractid != null) {
 
             // 发起协议收款
-            ysfService.pay(entranceDTO);
+            Boolean payFlag = ysfService.pay(entranceDTO);
 
             // 1. 协议扣款发起成功,
-            if (true) {
-                mav.addObject("component", "paying");
+            if (payFlag) {
+//              mav.addObject("component", "paying");
+                mav.setViewName("/acq/paySuccess");
                 return mav;
             }
 
             // 2. 协议扣款发起失败
-            if (true) {
-                mav.addObject("component", "err");
+            if (!payFlag) {
+//              mav.addObject("component", "err");
+                mav.setViewName("/acq/payFail");
                 mav.addObject("msg", "发起收款失败");
                 return mav;
             }
@@ -177,8 +179,16 @@ public class IndexController {
         //签约成功的情况下发起扣款
         if(!StringUtils.isEmpty(contractId)){
             entranceDTO.setContractId(contractId);
-            ysfService.pay(entranceDTO);
+            //发起协议扣款
+            Boolean payFlag = ysfService.pay(entranceDTO);
+            if(!payFlag){
+                //扣款失败页面
+                mav.setViewName("/acq/payFail");
+                return  mav;
+            }
         }
+        //返回扣款成功页面
+        mav.setViewName("/acq/paySuccess");
         return mav;
     }
 
