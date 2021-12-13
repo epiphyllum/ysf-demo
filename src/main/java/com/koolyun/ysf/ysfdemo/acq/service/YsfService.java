@@ -6,7 +6,6 @@ import com.koolyun.ysf.ysfdemo.acq.dto.EntranceDTO;
 import com.koolyun.ysf.ysfdemo.acq.dto.UserInfoDTO;
 import com.koolyun.ysf.ysfdemo.entity.TMchtContract;
 import com.koolyun.ysf.ysfdemo.service.TMchtContractService;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
