@@ -51,7 +51,8 @@ public class AcqController {
                 return;
             }
         }
-
+        //如果商户已经对用户实名,落库+尝试签约
+        acqService.saveReal(userInfoDTO);
         // 尝试发起到云闪付签约
         String contractId = ysfService.contract(txn.getUserInfo());
 

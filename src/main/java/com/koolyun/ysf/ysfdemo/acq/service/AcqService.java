@@ -71,14 +71,7 @@ public class AcqService {
             return false;
         }
         //实名认证完,将用户数据落库
-        TMchtContract tMchtContract = new TMchtContract();
-        BeanUtil.copyProperties(userInfoDTO,tMchtContract);
-        UpdateWrapper<TMchtContract> updateWrapper = new UpdateWrapper<TMchtContract>();
-        updateWrapper.set("name",userInfoDTO.getName());
-        updateWrapper.set("id_no",userInfoDTO.getIdNo());
-        updateWrapper.set("mobile",userInfoDTO.getMobile());
-        updateWrapper.eq("user_id",userInfoDTO.getUserId());
-        tMchtContractService.update(updateWrapper);
+        this.saveReal(userInfoDTO);
         return true;
     }
 
@@ -111,11 +104,17 @@ public class AcqService {
         return this.doVerify(entranceDTO.getSignature(),signStr);
     }
 
+    /**
+     * 验签
+     */
     private Boolean doVerify(String sign,String signStr){
         //验签
         return true;
     }
 
+    /**
+     * 构造签名串
+     */
     private String getSignStr(TreeMap<String, String> map) {
         StringBuilder sb = new StringBuilder();
 
@@ -131,6 +130,17 @@ public class AcqService {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * 保存实名认证信息
+     * @param userInfoDTO
+     * @return
+     */
+    public Boolean saveReal(UserInfoDTO userInfoDTO){
+            TMchtContract tMchtContract = new TMchtContract();
+            BeanUtil.copyProperties(userInfoDTO,tMchtContract);
+            return tMchtContractService.save(tMchtContract);
     }
 
 
