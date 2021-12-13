@@ -13,8 +13,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 /**
  * 调用云闪付接口
@@ -28,6 +30,9 @@ public class YsfService {
 
     @Autowired
     private TMchtContractService tMchtContractService;
+
+    @Resource(name = "taskExecutor")
+    private Executor executor;
 
 
     @Value("ysf.host")
@@ -71,15 +76,11 @@ public class YsfService {
         final Boolean[] payFlag = { false };
         log.info("尝试向云闪付发起协议扣款...");
 //        ResponseEntity<Integer> i = restTemplate.postForEntity(ysfHost + "/contract", null, Integer.class, 1);
-        new Thread(new Runnable() {
-            @Override
-            @SneakyThrows
-            public void run() {
-                Thread.sleep(3000);
-//                restTemplate.postForEntity("/")    // 告诉通联扣款成功
-                payFlag[0] = true; //
-            }
-        }).start();
+        executor.execute(()->{
+//               restTemplate.postForEntity("/")    // 告诉通联扣款成功
+                payFlag[0] = true;
+
+        });
         return  payFlag[0];
     }
 
