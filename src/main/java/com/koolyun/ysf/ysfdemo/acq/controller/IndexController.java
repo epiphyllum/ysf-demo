@@ -99,10 +99,9 @@ public class IndexController {
             mav.addObject("msg", "签名错误");
             return mav;
         }
-        // 创建交易, redis保存上下文,   入库
+        // 创建交易,入库
         acqService.createMchtOrder(entranceDTO);
         String txnKey = entranceDTO.getMchtNo() + "-"  + entranceDTO.getOrderNo();
-        acqService.saveTxn(txnKey,entranceDTO); // txnKey, txn;
         // 带协议号, 直接向银联发起后台扣款
         String contractid = entranceDTO.getContractId();
         if (!StringUtils.isEmpty(contractid)) {
@@ -122,6 +121,8 @@ public class IndexController {
                 return mav;
             }
         }
+        //当扣款协议号为空时,redis中保存上下文
+        acqService.saveTxn(txnKey,entranceDTO);
         // 不带协议号, 则直尝试发起签约, 让vue app展示签约界面
         // String userinfo = (String) params.remove("userinfo");
         mav.addObject("component", "sign");
